@@ -18,19 +18,23 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - name: generate pacman-contribution-graph.svg
-        uses: abozanona/pacman-contribution-graph@main
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          github_user_name: ${{ github.repository_owner }}
+          node-version: '20'
 
-      - name: move generated files to dist directory
+      - name: Install pacman-contribution-graph
+        run: npm install -g pacman-contribution-graph
+
+      - name: Generate Pac-Man Graph
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p dist
-          mv pacman-contribution-graph*.svg dist/
-          # Ensure dark mode file exists to prevent 404
-          if [ ! -f dist/pacman-contribution-graph-dark.svg ]; then
-            cp dist/pacman-contribution-graph.svg dist/pacman-contribution-graph-dark.svg 2>/dev/null || true
-          fi
+          # Generate light mode
+          pacman-contribution-graph --platform github --username ${{ github.repository_owner }} --gameTheme github --output dist/pacman-contribution-graph.svg
+          # Generate dark mode
+          pacman-contribution-graph --platform github --username ${{ github.repository_owner }} --gameTheme github-dark --output dist/pacman-contribution-graph-dark.svg
 
       - name: push pacman-contribution-graph.svg to the output branch
         uses: crazy-max/ghaction-github-pages@v3.1.0
